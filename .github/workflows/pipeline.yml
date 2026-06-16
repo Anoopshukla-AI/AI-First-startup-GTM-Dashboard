@@ -24,7 +24,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install httpx
+          pip install -r requirements.txt
 
       - name: Run enrichment pipeline
         env:

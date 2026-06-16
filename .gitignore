@@ -17,3 +17,9 @@ venv/
 
 # Wrangler
 .wrangler/
+
+# Caches and builds
+.mypy_cache/
+.pytest_cache/
+build/
+

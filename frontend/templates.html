@@ -36,7 +36,8 @@
     .logo-area { display: flex; flex-direction: column; gap: 4px; }
     .logo-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; color: var(--accent); text-transform: uppercase; }
     h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; color: var(--text); }
-    .nav-links { display: flex; gap: 16px; font-family: var(--mono); font-size: 11px; }
+    h1 span { color: var(--accent); }
+    .nav-links { display: flex; gap: 16px; font-family: var(--mono); font-size: 11px; align-items: center; }
     .nav-links a { color: var(--text3); text-decoration: none; padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; transition: 0.2s; }
     .nav-links a:hover, .nav-links a.active { color: var(--accent); border-color: rgba(0,229,160,0.3); background: rgba(0,229,160,0.05); }
 
@@ -72,19 +73,56 @@
     .btn:hover { background: rgba(0,229,160,0.2); }
     .btn.gated { background: transparent; border-color: var(--border2); color: var(--text2); }
     .btn.gated:hover { border-color: var(--text); color: var(--text); }
+
+    .action-btn {
+      background: none; border: 1px solid var(--border2); color: var(--text);
+      font-family: var(--mono); font-size: 12px; padding: 8px 16px; border-radius: 8px;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.15s;
+    }
+    .action-btn:hover { border-color: var(--text2); background: rgba(255,255,255,0.02); }
+
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999;
+      display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;
+    }
+    .modal-overlay.open { display: flex; opacity: 1; }
+    .modal {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 16px;
+      padding: 2rem; width: 100%; max-width: 400px; text-align: center;
+    }
+    .submit-btn {
+      width: 100%; background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.3); border-radius: 8px;
+      color: var(--accent); font-family: var(--mono); font-size: 13px; font-weight: bold; padding: 14px;
+      cursor: pointer; transition: 0.2s;
+    }
+    .submit-btn:hover { background: rgba(0,229,160,0.2); }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0,229,160,0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0,229,160,0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0,229,160,0); }
+    }
   </style>
 </head>
 <body>
 
+  <!-- HEADER -->
   <header>
     <div class="logo-area">
       <span class="logo-tag">// AIRadar</span>
       <h1>Template <span>Store</span></h1>
     </div>
     <div class="nav-links">
+      <div class="live-badge" style="margin: 0; padding: 4px 10px; font-size: 9px; display: inline-flex; align-items: center; border: 1px solid rgba(0,229,160,0.3); border-radius: 20px; font-family: var(--mono); color: var(--accent); background: rgba(0,229,160,0.05); font-weight: 700;">
+        <span class="live-dot" style="width: 6px; height: 6px; background: #00E5A0; border-radius: 50%; margin-right: 6px; display: inline-block; animation: pulse 2s infinite;"></span> LIVE
+      </div>
       <a href="/">Radar Dashboard</a>
+      <a href="/?mode=leads" id="nav-leads" style="display: none;">My Leads</a>
       <a href="/scorer.html">ICP Scorer</a>
       <a href="/templates.html" class="active">Template Store</a>
+      <div id="user-profile-container" style="display: flex; align-items: center; margin-left: 12px; position: relative;">
+        <button id="auth-btn" class="action-btn" style="padding: 6px 12px; font-size: 11px; background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.3); color: var(--accent); font-family: var(--mono); border-radius: 6px; cursor: pointer;" onclick="openAuthModal()">Sign In</button>
+      </div>
     </div>
   </header>
 
@@ -96,7 +134,6 @@
       <!-- FREE TEMPLATE -->
       <div class="template-card">
         <div class="video-wrapper">
-          <!-- Placeholder Video -->
           <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?controls=0" allowfullscreen></iframe>
         </div>
         <div class="card-body">
@@ -104,7 +141,7 @@
           <div class="t-desc">A robust error handling blueprint that catches failed webhooks, logs them to Slack, and triggers an automated retry queue. Essential for production AI workflows.</div>
           <div class="card-footer">
             <div class="downloads">↓ <span id="count-t1">1,248</span> downloads</div>
-            <a href="#" class="btn" onclick="downloadTemplate('t1', this)">Download Free</a>
+            <a href="#" class="btn" onclick="downloadTemplate('t1', this, false)">Download Free</a>
           </div>
         </div>
       </div>
@@ -119,7 +156,7 @@
           <div class="t-desc">Automatically enriches inbound leads using Clearbit and PeopleDataLabs, passing the context to OpenAI to score ICP fit before routing to HubSpot.</div>
           <div class="card-footer">
             <div class="downloads">↓ <span id="count-t2">854</span> downloads</div>
-            <a href="#" class="btn gated" onclick="downloadTemplate('t2', this)">Unlock Template</a>
+            <a href="#" class="btn gated" onclick="downloadTemplate('t2', this, true)">Unlock Template</a>
           </div>
         </div>
       </div>
@@ -134,7 +171,7 @@
           <div class="t-desc">Scrapes a target company's latest news, recent funding, and job postings to generate hyper-personalized cold email sequences pushed directly to Lemlist.</div>
           <div class="card-footer">
             <div class="downloads">↓ <span id="count-t3">2,109</span> downloads</div>
-            <a href="#" class="btn gated" onclick="downloadTemplate('t3', this)">Unlock Template</a>
+            <a href="#" class="btn gated" onclick="downloadTemplate('t3', this, true)">Unlock Template</a>
           </div>
         </div>
       </div>
@@ -142,10 +179,93 @@
     </div>
   </div>
 
+  <!-- AUTH MODAL -->
+  <div class="modal-overlay" id="auth-modal">
+    <div class="modal">
+      <div style="font-size: 1.4rem; font-weight: 800; margin-bottom: 8px;">Join AIRadar</div>
+      <p style="color: var(--text2); font-size: 13px; font-family: var(--mono); margin-bottom: 2rem;">Unlock 500+ verified AI leads and save your custom ICP.</p>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <input type="email" id="mock-email-input" class="modal-input" placeholder="Email address" style="width: 100%; background: var(--bg); border: 1px solid var(--border2); color: var(--text); padding: 12px; border-radius: 8px; font-family: var(--mono); outline: none;" />
+        <button class="submit-btn" style="padding: 12px; font-size: 12px;" onclick="mockLoginEmail()">Continue</button>
+        <button class="action-btn" style="width:100%; justify-content:center; padding:12px; border-color: var(--border2);" onclick="closeAuthModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const WORKER_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8787' : 'https://airadar.anoopvshukl2.workers.dev';
 
-    async function downloadTemplate(templateId, btn) {
+    // Mock Auth Token for the demo
+    const MOCK_TOKEN = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJtb2NrLXVzZXItMSJ9.signature";
+    window.currentUser = null;
+
+    // Session Persistence
+    function initAuth() {
+      const storedUser = localStorage.getItem('currentUser');
+      if (storedUser) {
+        try {
+          window.currentUser = JSON.parse(storedUser);
+          document.getElementById('nav-leads').style.display = 'inline-block';
+          updateProfileUI();
+        } catch (e) {
+          console.error("Failed to parse stored user", e);
+          window.currentUser = null;
+        }
+      }
+    }
+
+    function openAuthModal() {
+      document.getElementById('auth-modal').style.display = 'flex';
+      document.getElementById('auth-modal').classList.add('open');
+    }
+    
+    function closeAuthModal() {
+      document.getElementById('auth-modal').style.display = 'none';
+      document.getElementById('auth-modal').classList.remove('open');
+    }
+
+    function mockLoginEmail() {
+      const email = document.getElementById('mock-email-input').value || 'user@example.com';
+      const name = email.split('@')[0];
+      mockLogin(email, `https://ui-avatars.com/api/?name=${name}&background=00E5A0&color=fff`);
+    }
+
+    function mockLogin(email, avatarUrl) {
+      window.currentUser = { token: MOCK_TOKEN, email, avatar: avatarUrl };
+      localStorage.setItem('currentUser', JSON.stringify(window.currentUser));
+      closeAuthModal();
+      const navLeads = document.getElementById('nav-leads');
+      if (navLeads) navLeads.style.display = 'inline-block';
+      updateProfileUI();
+    }
+
+    function mockLogout() {
+      window.currentUser = null;
+      localStorage.removeItem('currentUser');
+      const navLeads = document.getElementById('nav-leads');
+      if (navLeads) navLeads.style.display = 'none';
+      const container = document.getElementById('user-profile-container');
+      container.innerHTML = `<button id="auth-btn" class="action-btn" style="padding: 6px 12px; font-size: 11px; background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.3); color: var(--accent); font-family: var(--mono); border-radius: 6px; cursor: pointer;" onclick="openAuthModal()">Sign In</button>`;
+    }
+
+    function updateProfileUI() {
+      const container = document.getElementById('user-profile-container');
+      if (container && window.currentUser) {
+        container.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 4px 12px 4px 4px; border-radius: 20px; border: 1px solid var(--border2); cursor: pointer;" onclick="mockLogout()">
+            <img src="${window.currentUser.avatar}" width="24" height="24" style="border-radius: 50%;" />
+            <span style="font-size: 12px; font-family: var(--mono); color: var(--text2);">${window.currentUser.email}</span>
+          </div>`;
+      }
+    }
+
+    async function downloadTemplate(templateId, btn, isGated = false) {
+      if (isGated && !window.currentUser) {
+        alert("Please sign in to unlock this premium GTM template.");
+        openAuthModal();
+        return;
+      }
+
       btn.innerText = "Downloading...";
       
       try {
@@ -171,6 +291,9 @@
         btn.style.background = "var(--accent)";
       }, 500);
     }
+
+    // Initialize Auth
+    initAuth();
   </script>
 </body>
 </html>

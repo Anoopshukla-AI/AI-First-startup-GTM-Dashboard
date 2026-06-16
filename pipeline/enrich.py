@@ -16,10 +16,8 @@ Required environment variables (set in GitHub Actions secrets):
 
 import os
 import json
-import time
-import hashlib
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Optional
 import re
 import httpx
@@ -35,7 +33,6 @@ NVIDIA_API_KEY   = os.environ["NVIDIA_API_KEY"]   # Free at build.nvidia.com
 NVIDIA_BASE_URL  = "https://integrate.api.nvidia.com/v1"
 NVIDIA_MODEL     = "meta/llama-3.3-70b-instruct"  # Best free model on NIM
 PDL_API_KEY      = os.environ.get("PDL_API_KEY", "")
-HUNTER_API_KEY   = os.environ.get("HUNTER_API_KEY", "")
 WORKER_URL       = os.environ["WORKER_URL"].rstrip("/")
 PIPELINE_SECRET  = os.environ["PIPELINE_SECRET"]
 
@@ -134,25 +131,6 @@ def get_live_domains() -> list[str]:
     log.info(f"Total unique domains found: {len(domains)}")
     return list(domains)
 
-
-def verify_email_domain(domain: str) -> Optional[float]:
-    """Check domain email deliverability via Hunter.io."""
-    if not HUNTER_API_KEY:
-        return None
-    try:
-        resp = httpx.get(
-            "https://api.hunter.io/v2/domain-search",
-            params={"domain": domain, "api_key": HUNTER_API_KEY, "limit": 1},
-            timeout=8,
-        )
-        if resp.status_code == 200:
-            data = resp.json()
-            return data.get("data", {}).get("domain_score", None)
-    except Exception as e:
-        log.warning(f"Hunter.io check failed for {domain}: {e}")
-    return None
-
-
 def score_with_nvidia_nim(company: dict) -> dict:
     """Score ICP fit using NVIDIA NIM (meta/llama-3.3-70b-instruct, free tier).
     Returns score, rationale, outreach_angle."""
@@ -237,6 +215,7 @@ def push_to_worker(companies: list[dict]) -> dict:
     return resp.json()
 
 def process_domain(domain: str) -> Optional[dict]:
+    """Process a single domain: enrich data, perform fallback HTML parsing, and score using NVIDIA NIM."""
     log.info(f"Processing {domain}")
     company_data = fetch_company_from_pdl(domain)
     if not company_data:
@@ -263,6 +242,7 @@ def process_domain(domain: str) -> Optional[dict]:
 import concurrent.futures
 
 def run_pipeline():
+    """Run the nightly company search, data enrichment, and scoring pipeline end-to-end."""
     live_domains = get_live_domains()
     if not live_domains:
         log.info("No live domains found, exiting.")

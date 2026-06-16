@@ -185,6 +185,83 @@
       mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%);
     }
 
+    /* ── SKELETON LOADING ──────────────────────────────────────────── */
+    @keyframes shimmer {
+      0% { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+    .skeleton-card {
+      background: var(--bg2);
+      padding: 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 260px;
+    }
+    .skeleton-line {
+      height: 14px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--bg3) 25%, rgba(255,255,255,0.06) 50%, var(--bg3) 75%);
+      background-size: 800px 100%;
+      animation: shimmer 1.5s ease-in-out infinite;
+    }
+    .skeleton-line.w60 { width: 60%; }
+    .skeleton-line.w40 { width: 40%; }
+    .skeleton-line.w80 { width: 80%; }
+    .skeleton-line.w100 { width: 100%; }
+    .skeleton-line.h40 { height: 40px; border-radius: 8px; }
+    .skeleton-top { display: flex; gap: 12px; align-items: center; }
+    .skeleton-avatar {
+      width: 40px; height: 40px; border-radius: 8px; flex-shrink: 0;
+      background: linear-gradient(90deg, var(--bg3) 25%, rgba(255,255,255,0.06) 50%, var(--bg3) 75%);
+      background-size: 800px 100%;
+      animation: shimmer 1.5s ease-in-out infinite;
+    }
+    .skeleton-score {
+      width: 52px; height: 52px; border-radius: 10px; flex-shrink: 0;
+      background: linear-gradient(90deg, var(--bg3) 25%, rgba(255,255,255,0.06) 50%, var(--bg3) 75%);
+      background-size: 800px 100%;
+      animation: shimmer 1.5s ease-in-out infinite;
+    }
+
+    /* ── CARD ENTRANCE ANIMATION ─────────────────────────────────── */
+    @keyframes cardFadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .card { animation: cardFadeIn 0.35s ease-out both; }
+
+    /* ── LOGO FALLBACK AVATAR ─────────────────────────────────────── */
+    .logo-fallback {
+      width: 40px; height: 40px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--sans); font-weight: 800; font-size: 16px;
+      color: #fff; flex-shrink: 0; text-transform: uppercase;
+    }
+
+    /* ── STICKY SCROLL HEADER ─────────────────────────────────────── */
+    .sticky-header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      background: rgba(8,12,15,0.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 2.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      transform: translateY(-100%); transition: transform 0.3s ease;
+    }
+    .sticky-header.visible { transform: translateY(0); }
+    .sticky-header .logo-mini {
+      font-family: var(--sans); font-weight: 800; font-size: 16px; color: var(--text);
+    }
+    .sticky-header .logo-mini span { color: var(--accent); }
+    .sticky-nav { display: flex; gap: 8px; align-items: center; }
+    .sticky-nav button {
+      background: transparent; border: 1px solid var(--border2); border-radius: 6px;
+      color: var(--text2); font-family: var(--mono); font-size: 10px;
+      padding: 5px 10px; cursor: pointer; transition: 0.15s;
+    }
+    .sticky-nav button:hover { border-color: var(--accent); color: var(--accent); }
+    .sticky-nav button.primary { background: rgba(0,229,160,0.1); border-color: rgba(0,229,160,0.3); color: var(--accent); }
+
     /* ── HEADER ─────────────────────────────────────────────────────── */
     header {
       position: relative;
@@ -487,8 +564,9 @@
     .company-logo {
       width: 40px; height: 40px; border-radius: 8px; object-fit: cover;
       background: var(--bg); border: 1px solid var(--border);
-      flex-shrink: 0;
+      flex-shrink: 0; display: none;
     }
+    .company-logo.loaded { display: block; }
 
     .company-info { flex: 1; min-width: 0; }
 
@@ -675,22 +753,24 @@
     .card-footer {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 6px;
       padding-top: 8px;
       border-top: 1px solid var(--border);
+      flex-wrap: wrap;
     }
 
-    .card-links { display: flex; gap: 8px; }
+    .card-links { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
 
     .card-link {
       font-family: var(--mono);
       font-size: 10px;
       color: var(--text3);
       text-decoration: none;
-      padding: 3px 8px;
+      padding: 3px 7px;
       border: 1px solid var(--border);
       border-radius: 4px;
       transition: all 0.15s;
+      white-space: nowrap;
     }
 
     .card-link:hover {
@@ -702,6 +782,8 @@
       font-family: var(--mono);
       font-size: 9px;
       color: var(--text3);
+      white-space: nowrap;
+      margin-left: auto;
     }
 
     /* ── EMPTY / LOADING STATES ─────────────────────────────────────── */
@@ -1015,6 +1097,16 @@
 </head>
 <body>
 
+  <!-- STICKY SCROLL HEADER -->
+  <div class="sticky-header" id="sticky-header">
+    <div class="logo-mini">AI<span>Radar</span></div>
+    <div class="sticky-nav">
+      <button onclick="document.getElementById('grid').scrollIntoView({behavior:'smooth'})">Dashboard</button>
+      <button onclick="exportCSV()">Export CSV</button>
+      <button class="primary" onclick="document.getElementById('grid').scrollIntoView({behavior:'smooth'})">↓ Jump to Grid</button>
+    </div>
+  </div>
+
   <!-- HEADER -->
   <header style="flex-direction: column; gap: 2rem;">
     <div style="display: flex; justify-content: space-between; width: 100%; align-items: flex-start;">
@@ -1028,6 +1120,7 @@
         <div style="display: flex; gap: 16px; margin-top: 2rem;">
           <button class="action-btn primary" style="padding: 12px 24px; font-size: 14px;" onclick="document.getElementById('grid').scrollIntoView({behavior: 'smooth'})">Open Radar Dashboard</button>
           <button class="action-btn" style="padding: 12px 24px; font-size: 14px; background: transparent; border: 1px solid var(--border2);" onclick="document.getElementById('grid').scrollIntoView({behavior: 'smooth'})">See 20 sample accounts</button>
+          <button class="action-btn" id="skip-to-dashboard" style="padding: 12px 24px; font-size: 14px; background: rgba(0,102,255,0.08); border: 1px solid rgba(0,102,255,0.3); color: var(--accent2);" onclick="document.getElementById('grid').scrollIntoView({behavior: 'smooth'})">↓ Skip to Dashboard</button>
         </div>
       </div>
       
@@ -1424,6 +1517,28 @@
 const WORKER_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8787' : 'https://airadar.anoopvshukl2.workers.dev';
 window.currentUser = null;
 
+function initAuth() {
+  const storedUser = localStorage.getItem('currentUser');
+  if (storedUser) {
+    try {
+      window.currentUser = JSON.parse(storedUser);
+      const navLeads = document.getElementById('nav-leads');
+      if (navLeads) navLeads.style.display = 'inline-block';
+      const container = document.getElementById('user-profile-container');
+      if (container) {
+        container.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 4px 12px 4px 4px; border-radius: 20px; border: 1px solid var(--border2); cursor: pointer;" onclick="mockLogout()">
+            <img src="${window.currentUser.avatar}" width="24" height="24" style="border-radius: 50%;" />
+            <span style="font-size: 12px; font-family: var(--mono); color: var(--text2);">${window.currentUser.email}</span>
+          </div>`;
+      }
+    } catch (e) {
+      console.error("Failed to parse stored user", e);
+      window.currentUser = null;
+    }
+  }
+}
+
 let state = {
   page: 1,
   limit: 20,
@@ -1455,6 +1570,7 @@ function mockLoginEmail() {
 function mockLogin(email, avatarUrl) {
   const MOCK_TOKEN = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJtb2NrLXVzZXItMSJ9.signature";
   window.currentUser = { token: MOCK_TOKEN, email, avatar: avatarUrl };
+  localStorage.setItem('currentUser', JSON.stringify(window.currentUser));
   closeAuthModal();
   document.getElementById('nav-leads').style.display = 'inline-block';
   const container = document.getElementById('user-profile-container');
@@ -1468,6 +1584,7 @@ function mockLogin(email, avatarUrl) {
 
 function mockLogout() {
   window.currentUser = null;
+  localStorage.removeItem('currentUser');
   document.getElementById('nav-leads').style.display = 'none';
   state.dashboardMode = 'global';
   document.getElementById('nav-global').classList.add('active');
@@ -1532,6 +1649,34 @@ function countryFlag(country) {
   return flags[country] || '🌍';
 }
 
+// ── LOGO FALLBACK COLOR ──────────────────────────────────────────────────
+function logoColor(name) {
+  const colors = ['#6366f1','#ec4899','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ef4444','#14b8a6','#f97316','#06b6d4'];
+  let hash = 0;
+  for (let i = 0; i < (name||'').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+}
+
+// ── SKELETON CARDS ───────────────────────────────────────────────────────
+function renderSkeletons(count = 8) {
+  return Array.from({length: count}, () => `
+    <div class="skeleton-card">
+      <div class="skeleton-top">
+        <div class="skeleton-avatar"></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+          <div class="skeleton-line w60"></div>
+          <div class="skeleton-line w40"></div>
+        </div>
+        <div class="skeleton-score"></div>
+      </div>
+      <div style="display:flex;gap:6px"><div class="skeleton-line w40" style="height:22px;border-radius:4px"></div><div class="skeleton-line w40" style="height:22px;border-radius:4px"></div></div>
+      <div class="skeleton-line w100"></div>
+      <div class="skeleton-line w80"></div>
+      <div class="skeleton-line w60"></div>
+    </div>
+  `).join('');
+}
+
 // ── RENDER CARD ───────────────────────────────────────────────────────────
 function renderCard(company, index) {
   const score = company.icp_score;
@@ -1540,14 +1685,26 @@ function renderCard(company, index) {
   const funding = formatFunding(company.funding_total_usd);
   const enrichedAgo = company.enriched_at ? timeAgo(company.enriched_at) : '';
   const flag = countryFlag(company.hq_country);
+  const companyName = company.name || company.domain;
+  const initial = companyName.charAt(0).toUpperCase();
+  const bgColor = logoColor(companyName);
   const logoSrc = company.logo_url || `https://logo.clearbit.com/${company.domain}`;
+  const delay = Math.min(index * 0.04, 0.6);
+
+  const scoreText = score !== null && score !== undefined
+    ? (score >= 75 ? 'High fit' : score >= 60 ? 'Mid fit' : 'Low fit')
+    : '';
+
+  // Only show outreach block if real outreach angle exists
+  const hasOutreach = company.outreach_angle && company.outreach_angle.length > 10;
 
   return `
-    <div class="card">
+    <div class="card" style="animation-delay: ${delay}s">
       <div class="card-top">
-        <img src="${logoSrc}" class="company-logo" onerror="this.style.display='none'" alt="logo" />
+        <div class="logo-fallback" style="background:${bgColor}">${initial}</div>
+        <img src="${logoSrc}" class="company-logo" onload="this.classList.add('loaded'); this.previousElementSibling.style.display='none'" onerror="" alt="" />
         <div class="company-info">
-          <div class="company-name">${company.name || company.domain}</div>
+          <div class="company-name">${companyName}</div>
           <div class="company-domain">${company.domain}</div>
         </div>
         <div style="text-align: right;">
@@ -1555,9 +1712,7 @@ function renderCard(company, index) {
             ${score !== null && score !== undefined ? score : '–'}
             <span class="score-label">ICP</span>
           </div>
-          <div style="font-family: var(--mono); font-size: 9px; color: var(--text3); margin-top: 6px;">
-            ${score !== null && score !== undefined ? (score >= 75 ? 'High fit' : score >= 60 ? 'Mid fit' : 'Low fit') : 'Pending score'} • <a href="/scorer.html?domain=${company.domain}" style="color:var(--accent); text-decoration:none;">Customize now</a>
-          </div>
+          ${scoreText ? `<div style="font-family: var(--mono); font-size: 9px; color: var(--text3); margin-top: 4px;">${scoreText}</div>` : ''}
         </div>
       </div>
 
@@ -1573,13 +1728,9 @@ function renderCard(company, index) {
 
       ${company.description && !company.one_liner ? `<div class="card-desc">${company.description}</div>` : ''}
 
-      <div style="font-family: var(--mono); font-size: 11px; color: var(--text3); border-left: 2px solid var(--border); padding-left: 8px; margin-top: 8px; font-style: italic;">
-        Outbound angle: Coming soon — AI-generated per account based on stack + GTM motion.
-      </div>
-
       ${company.icp_rationale ? `<div class="rationale">${company.icp_rationale}</div>` : ''}
 
-      ${company.outreach_angle ? `
+      ${hasOutreach ? `
         <div class="outreach">
           <div class="outreach-header">
             <div class="outreach-label">// Outreach angle</div>
@@ -1595,12 +1746,13 @@ function renderCard(company, index) {
 
       <div class="card-footer">
         <div class="card-links">
-          <a class="card-link" href="https://${company.domain}" target="_blank">↗ website</a>
-          ${company.linkedin_url ? `<a class="card-link" href="${company.linkedin_url}" target="_blank">linkedin</a>` : ''}
-          <button class="copy-btn" onclick="addToShortlist(${company.id})">+ Add to My Leads</button>
-          <button class="copy-btn" style="color: #FF7A59; border-color: rgba(255,122,89,0.3);" onclick="syncToHubspot([${company.id}], false)">HubSpot</button>
+          <a class="card-link" href="https://${company.domain}" target="_blank">↗ site</a>
+          ${company.linkedin_url ? `<a class="card-link" href="${company.linkedin_url}" target="_blank">in</a>` : ''}
+          <button class="copy-btn" onclick="addToShortlist(${company.id})">+ Lead</button>
+          <button class="copy-btn" style="color:#FF7A59;border-color:rgba(255,122,89,0.3)" onclick="syncToHubspot([${company.id}], false)">HS</button>
+          <a class="card-link" href="/scorer.html?domain=${company.domain}" style="color:var(--accent);border-color:rgba(0,229,160,0.2)">Score ↗</a>
         </div>
-        <span class="enriched-time">${enrichedAgo ? `scored ${enrichedAgo}` : 'pending score'}</span>
+        <span class="enriched-time">${enrichedAgo ? `${enrichedAgo}` : ''}</span>
       </div>
     </div>`;
 }
@@ -1637,7 +1789,8 @@ async function fetchFilters() {
 // ── FETCH COMPANIES ───────────────────────────────────────────────────────
 async function fetchCompanies(page = 1) {
   const grid = document.getElementById('grid');
-  grid.innerHTML = '<div class="state-box"><span class="loading-dots">Loading intelligence</span></div>';
+  grid.style.display = 'grid';
+  grid.innerHTML = renderSkeletons(8);
 
   try {
     let url, data;
@@ -1681,6 +1834,7 @@ async function fetchCompanies(page = 1) {
       if (state.country !== 'all') params.set('country', state.country);
       if (state.scoreFilter === 'high') params.set('min_score', '70');
       if (state.scoreFilter === 'mid') { params.set('min_score', '40'); params.set('max_score', '69'); }
+      if (state.scoreFilter === 'low') { params.set('max_score', '39'); }
 
       const res = await fetch(`${WORKER_BASE}/api/companies?${params}`);
       data = await res.json();
@@ -1723,15 +1877,11 @@ async function fetchStats() {
   try {
     const res = await fetch(`${WORKER_BASE}/api/stats`);
     const s = await res.json();
-    document.getElementById('stat-total').textContent = s.total_companies || 0;
-    document.getElementById('stat-enriched').textContent = s.enriched_companies || 0;
-    document.getElementById('stat-avg').textContent = s.avg_icp_score || '—';
-    const topStage = s.top_stages?.[0];
-    document.getElementById('stat-stage').textContent = topStage ? topStage.funding_stage : '—';
-    document.getElementById('stat-categories').textContent = s.top_categories?.length || '—';
-    document.getElementById('stat-countries').textContent = s.top_countries?.length || '—';
+    const statTotal = document.getElementById('stat-total');
+    if (statTotal) statTotal.textContent = s.total_companies || 0;
     if (s.last_updated) {
-      document.getElementById('last-updated').textContent = `Updated: ${timeAgo(s.last_updated)}`;
+      const lu = document.getElementById('last-updated');
+      if (lu) lu.textContent = `Updated: ${timeAgo(s.last_updated)}`;
     }
   } catch { /* stats are non-critical */ }
 }
@@ -1873,10 +2023,7 @@ function closeScoreDrawer() {
   document.getElementById('score-drawer').classList.remove('open');
 }
 
-// ── ICP MODAL ─────────────────────────────────────────────────────────────
-function hideAddModal() {
-  document.getElementById('add-modal').classList.remove('open');
-}
+// (duplicate hideAddModal removed — defined below with showAddModal)
 
 // ── ALERTS MODAL ──────────────────────────────────────────────────────────
 function openAlertsModal() {
@@ -1918,17 +2065,7 @@ async function submitAlert() {
   }
 }
 
-async function submitStartup() {
-  const btn = document.querySelector('#add-modal .primary');
-  btn.textContent = 'Adding...';
-  btn.disabled = true;
-  setTimeout(() => {
-    hideAddModal();
-    showToast('Startup added to queue for enrichment', 'success');
-    btn.textContent = 'Add to Radar';
-    btn.disabled = false;
-  }, 1000);
-}
+// (duplicate submitStartup removed — real implementation below)
 
 // ── ICP MODAL ─────────────────────────────────────────────────────────────
 function openIcpModal() { document.getElementById('icp-modal').classList.add('open'); }
@@ -1938,8 +2075,9 @@ function closeIcpModal() { document.getElementById('icp-modal').classList.remove
 function setScoreFilter(filter) {
   state.scoreFilter = filter;
   state.page = 1;
-  ['all','high','mid'].forEach(f => {
-    document.getElementById(`pill-${f}`).classList.toggle('active', f === filter);
+  ['all','high','mid','low'].forEach(f => {
+    const el = document.getElementById(`pill-${f}`);
+    if (el) el.classList.toggle('active', f === filter);
   });
   fetchCompanies();
 }
@@ -1949,7 +2087,8 @@ function changePage(delta) {
   if (next < 1 || next > state.pages) return;
   state.page = next;
   fetchCompanies();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  const grid = document.getElementById('grid');
+  if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function copyText(btn, text) {
@@ -2187,10 +2326,36 @@ function applySavedView(view) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────
+initAuth();
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('mode') === 'leads') {
+  if (window.currentUser) {
+    state.dashboardMode = 'leads';
+    document.getElementById('nav-global').classList.remove('active');
+    document.getElementById('nav-leads').classList.add('active');
+  } else {
+    openAuthModal();
+  }
+}
 fetchFilters();
 fetchStats();
 fetchCompanies();
 setInterval(fetchStats, 5 * 60 * 1000);
+
+// ── STICKY HEADER ON SCROLL ──────────────────────────────────────────────
+const stickyHeader = document.getElementById('sticky-header');
+let lastScroll = 0;
+window.addEventListener('scroll', () => {
+  const gridEl = document.getElementById('grid');
+  if (!gridEl || !stickyHeader) return;
+  const gridTop = gridEl.getBoundingClientRect().top + window.scrollY;
+  if (window.scrollY > gridTop - 60) {
+    stickyHeader.classList.add('visible');
+  } else {
+    stickyHeader.classList.remove('visible');
+  }
+  lastScroll = window.scrollY;
+}, { passive: true });
 </script>
 </body>
 </html>

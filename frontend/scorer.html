@@ -37,7 +37,8 @@
     .logo-area { display: flex; flex-direction: column; gap: 4px; }
     .logo-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; color: var(--accent); text-transform: uppercase; }
     h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; color: var(--text); }
-    .nav-links { display: flex; gap: 16px; font-family: var(--mono); font-size: 11px; }
+    h1 span { color: var(--accent); }
+    .nav-links { display: flex; gap: 16px; font-family: var(--mono); font-size: 11px; align-items: center; }
     .nav-links a { color: var(--text3); text-decoration: none; padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; transition: 0.2s; }
     .nav-links a:hover, .nav-links a.active { color: var(--accent); border-color: rgba(0,229,160,0.3); background: rgba(0,229,160,0.05); }
 
@@ -45,7 +46,7 @@
     .container { position: relative; z-index: 10; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; padding: 2.5rem; max-width: 1200px; margin: 0 auto; width: 100%; flex: 1; }
     @media(max-width: 800px) { .container { grid-template-columns: 1fr; } }
     
-    .panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; }
+    .panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; display: flex; flex-direction: column; }
     .panel-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; }
     
     /* ── FORM ── */
@@ -56,7 +57,7 @@
       color: var(--text); font-family: var(--mono); font-size: 13px; padding: 12px; outline: none; transition: 0.15s;
     }
     input[type="text"]:focus, textarea:focus { border-color: var(--accent); }
-    textarea { resize: vertical; min-height: 120px; line-height: 1.5; }
+    textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
     .hint { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-top: 6px; }
     
     button.submit-btn {
@@ -73,7 +74,7 @@
       width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--border);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       margin: 0 auto 2rem; font-size: 2.5rem; font-weight: 800; color: var(--accent);
-      background: var(--bg); box-shadow: 0 0 20px rgba(0,229,160,0.1);
+      background: var(--bg); box-shadow: 0 0 20px rgba(0,229,160,0.1); transition: 0.3s;
     }
     .score-circle span { font-size: 10px; font-family: var(--mono); font-weight: 400; color: var(--text3); letter-spacing: 0.1em; }
     
@@ -87,94 +88,178 @@
     .signal-met .signal-icon { color: var(--accent); }
     .signal-missed .signal-icon { color: var(--red); }
     .signal-met { border-color: rgba(0,229,160,0.2); background: rgba(0,229,160,0.02); color: var(--text); }
+    .signal-missed { border-color: rgba(255,71,87,0.2); background: rgba(255,71,87,0.02); }
     
-    .rationale-box { font-family: var(--mono); font-size: 11px; color: var(--text2); line-height: 1.6; padding-left: 12px; border-left: 2px solid var(--accent); }
+    .rationale-box { font-family: var(--mono); font-size: 12px; color: var(--text2); line-height: 1.6; padding: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; border-left: 2px solid var(--accent); }
     
-    .loading-state { text-align: center; color: var(--text3); font-family: var(--mono); font-size: 13px; padding: 3rem 0; display: none; }
+    .loading-state { text-align: center; color: var(--text3); font-family: var(--mono); font-size: 13px; padding: 4rem 0; display: none; }
     .dots::after { content: ''; animation: dots 1.2s steps(4, end) infinite; }
     @keyframes dots { 0%, 20% { content: ''; } 40% { content: '.'; } 60% { content: '..'; } 80%, 100% { content: '...'; } }
 
+    .action-btn {
+      background: none; border: 1px solid var(--border2); color: var(--text);
+      font-family: var(--mono); font-size: 12px; padding: 8px 16px; border-radius: 8px;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.15s;
+    }
+    .action-btn:hover { border-color: var(--text2); background: rgba(255,255,255,0.02); }
+    
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999;
+      display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;
+    }
+    .modal-overlay.open { display: flex; opacity: 1; }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0,229,160,0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0,229,160,0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0,229,160,0); }
+    }
   </style>
 </head>
 <body>
 
+  <!-- HEADER -->
   <header>
     <div class="logo-area">
       <span class="logo-tag">// AIRadar</span>
       <h1>Personalized <span>Scorer</span></h1>
     </div>
     <div class="nav-links">
+      <div class="live-badge" style="margin: 0; padding: 4px 10px; font-size: 9px; display: inline-flex; align-items: center; border: 1px solid rgba(0,229,160,0.3); border-radius: 20px; font-family: var(--mono); color: var(--accent); background: rgba(0,229,160,0.05); font-weight: 700;">
+        <span class="live-dot" style="width: 6px; height: 6px; background: #00E5A0; border-radius: 50%; margin-right: 6px; display: inline-block; animation: pulse 2s infinite;"></span> LIVE
+      </div>
       <a href="/">Radar Dashboard</a>
+      <a href="/?mode=leads" id="nav-leads" style="display: none;">My Leads</a>
       <a href="/scorer.html" class="active">ICP Scorer</a>
       <a href="/templates.html">Template Store</a>
+      <div id="user-profile-container" style="display: flex; align-items: center; margin-left: 12px; position: relative;">
+        <button id="auth-btn" class="action-btn" style="padding: 6px 12px; font-size: 11px; background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.3); color: var(--accent); font-family: var(--mono); border-radius: 6px; cursor: pointer;" onclick="openAuthModal()">Sign In</button>
+      </div>
     </div>
   </header>
 
   <div class="container">
-    <!-- INPUT PANEL (WIZARD) -->
+    <!-- INPUT PANEL (WIZARD & MANUAL) -->
     <div class="panel">
-      <div class="panel-title">ICP Wizard</div>
-      <p style="font-family: var(--mono); font-size: 11px; color: var(--text3); margin-bottom: 1.5rem;">
-        Define your ideal customer to generate a tailored scoring formula.
-      </p>
+      <div class="panel-title">1. Define Your ICP</div>
+      
+      <!-- Wizard Mode fields -->
+      <div style="background: var(--bg3); padding: 1.2rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1.5rem;">
+        <div style="font-family: var(--mono); font-size: 10px; color: var(--accent); margin-bottom: 12px; text-transform: uppercase; font-weight: bold;">ICP Profile Generator</div>
+        
+        <div class="form-group">
+          <label>Target Geography</label>
+          <select id="wiz-geo" style="width:100%; background:var(--bg); border:1px solid var(--border2); color:var(--text); padding:10px; border-radius:8px;">
+            <option value="Global">Global</option>
+            <option value="US">United States only</option>
+            <option value="EU">Europe only</option>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label>1. Target Geography</label>
-        <select id="wiz-geo" style="width:100%; background:var(--bg); border:1px solid var(--border2); color:var(--text); padding:10px; border-radius:8px;">
-          <option value="Global">Global</option>
-          <option value="US">United States only</option>
-          <option value="EU">Europe only</option>
-        </select>
+        <div class="form-group">
+          <label>Target Category</label>
+          <select id="wiz-category" style="width:100%; background:var(--bg); border:1px solid var(--border2); color:var(--text); padding:10px; border-radius:8px;">
+            <option value="Any">Any AI category</option>
+            <option value="AI Infrastructure">AI Infrastructure / Dev Tools</option>
+            <option value="AI Agents">AI Agents / Copilots</option>
+            <option value="Enterprise AI">Enterprise AI / Search</option>
+            <option value="Vertical SaaS">Vertical SaaS / Apps</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Ideal Stage</label>
+          <select id="wiz-stage" style="width:100%; background:var(--bg); border:1px solid var(--border2); color:var(--text); padding:10px; border-radius:8px;">
+            <option value="Any">Any Stage</option>
+            <option value="Seed">Seed (Early, small teams)</option>
+            <option value="Series A">Series A (Finding PMF)</option>
+            <option value="Series B+">Series B+ (Scaling GTM)</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0">
+          <label>Required Tech Stack (Optional)</label>
+          <input type="text" id="wiz-tech" placeholder="e.g. Python, React, OpenAI" />
+        </div>
       </div>
 
+      <!-- Custom ICP text string -->
       <div class="form-group">
-        <label>2. Target Category</label>
-        <select id="wiz-category" style="width:100%; background:var(--bg); border:1px solid var(--border2); color:var(--text); padding:10px; border-radius:8px;">
-          <option value="Any">Any AI category</option>
-          <option value="AI Infrastructure">AI Infrastructure / Dev Tools</option>
-          <option value="AI Agents">AI Agents / Copilots</option>
-          <option value="Enterprise AI">Enterprise AI / Search</option>
-          <option value="Vertical SaaS">Vertical SaaS / Apps</option>
-        </select>
+        <label>Custom ICP Criteria (Text)</label>
+        <textarea id="icp-input" placeholder="Describe your ideal customer profile..."></textarea>
+        <div style="display:flex; justify-content:space-between; margin-top:8px; align-items:center;">
+          <p class="hint">Updates automatically from wizard above.</p>
+          <button class="action-btn" id="generate-btn" style="padding: 4px 10px; font-size:10px;" onclick="saveICPProfile()">Save ICP Profile</button>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label>3. Ideal Stage</label>
-        <select id="wiz-stage" style="width:100%; background:var(--bg); border:1px solid var(--border2); color:var(--text); padding:10px; border-radius:8px;">
-          <option value="Any">Any Stage</option>
-          <option value="Seed">Seed (Early, small teams)</option>
-          <option value="Series A">Series A (Finding PMF)</option>
-          <option value="Series B+">Series B+ (Scaling GTM)</option>
-        </select>
+      <!-- Domain Inputs -->
+      <div class="form-group" style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+        <label>2. Target Domain to Score</label>
+        <input type="text" id="domain-input" placeholder="e.g. openai.com" />
+        <div style="margin-top: 8px; font-family: var(--mono); font-size: 11px; display: flex; align-items: center; justify-content: space-between;">
+          <span style="color: var(--text3);">Or upload CSV of domains:</span>
+          <label class="action-btn" style="padding: 4px 8px; font-size: 10px; cursor: pointer; display: inline-block;">
+            Choose File
+            <input type="file" id="csv-upload" accept=".csv" style="display: none;" onchange="handleFileUpload()" />
+          </label>
+        </div>
+        <div id="file-name-display" style="display: none; margin-top: 6px; font-size: 11px; color: var(--accent); font-family: var(--mono);"></div>
       </div>
 
-      <div class="form-group">
-        <label>4. Required Tech Stack (Optional)</label>
-        <input type="text" id="wiz-tech" placeholder="e.g. Python, React, OpenAI" />
-      </div>
-
-      <button class="submit-btn" id="generate-btn" onclick="generateAndSaveICP()">Generate & Save ICP Profile</button>
+      <button class="submit-btn" id="score-btn" onclick="scoreCustom()">Analyze & Score Domain(s)</button>
     </div>
 
     <!-- RESULTS PANEL -->
     <div class="panel">
-      <div class="panel-title">Signal Breakdown</div>
+      <div class="panel-title">Analysis Results</div>
       
       <div class="loading-state" id="loading">
-        Analyzing domain against custom ICP<span class="dots"></span>
+        Analyzing target(s) against custom ICP<span class="dots"></span>
       </div>
 
       <div id="results-area">
-      <div id="results-area">
-        <div class="rationale-box" id="res-rationale" style="font-size: 14px; color: var(--accent); margin-bottom: 1.5rem;"></div>
+        <div class="score-circle" id="res-score">
+          —<span>ICP</span>
+        </div>
         
-        <div style="display:flex; gap:12px;">
-          <a href="/" class="submit-btn" style="text-decoration:none; text-align:center; display:block;">Go to "Your Radar"</a>
+        <h3 id="res-company-name" style="text-align:center; margin-bottom:0.5rem; font-size:1.4rem;">Company Name</h3>
+        <p id="res-company-desc" style="font-size:13px; color:var(--text2); text-align:center; margin-bottom:1.5rem; line-height:1.4;"></p>
+        
+        <div class="signals-list" id="res-signals">
+          <!-- Dynamically populated signal items -->
+        </div>
+
+        <div class="rationale-box" id="res-rationale" style="font-size: 13px; margin-bottom: 1.5rem;"></div>
+        
+        <div style="display:flex; gap:12px; margin-top:2rem;">
+          <a href="/" class="submit-btn" style="text-decoration:none; text-align:center; display:block; flex:1;">Go to "Your Radar"</a>
         </div>
       </div>
+
+      <div id="bulk-results-area" style="display: none;">
+        <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem;">Bulk Analysis Results</h3>
+        <div style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem;" id="bulk-results-list">
+          <!-- List of companies and their custom scores -->
+        </div>
+        <button class="submit-btn" id="bulk-export-btn" onclick="exportBulkCSV()">Export Bulk Results CSV</button>
+      </div>
       
-      <div id="empty-state" style="text-align:center; color:var(--text3); font-family:var(--mono); font-size:12px; padding: 4rem 0;">
-        Enter a domain and ICP to see the breakdown.
+      <div id="empty-state" style="text-align:center; color:var(--text3); font-family:var(--mono); font-size:12px; padding: 6rem 0;">
+        Enter a domain and custom ICP to see the breakdown.
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTH MODAL -->
+  <div class="modal-overlay" id="auth-modal">
+    <div class="modal">
+      <div style="font-size: 1.4rem; font-weight: 800; margin-bottom: 8px; text-align: center;">Join AIRadar</div>
+      <p style="color: var(--text2); font-size: 13px; font-family: var(--mono); margin-bottom: 2rem; text-align: center;">Unlock 500+ verified AI leads and save your custom ICP.</p>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <input type="email" id="mock-email-input" class="modal-input" placeholder="Email address" style="width: 100%; background: var(--bg); border: 1px solid var(--border2); color: var(--text); padding: 12px; border-radius: 8px; font-family: var(--mono); outline: none;" />
+        <button class="submit-btn" style="padding: 12px; font-size: 12px;" onclick="mockLoginEmail()">Continue</button>
+        <button class="action-btn" style="width:100%; justify-content:center; padding:12px; border-color: var(--border2);" onclick="closeAuthModal()">Cancel</button>
       </div>
     </div>
   </div>
@@ -182,9 +267,74 @@
   <script>
     const WORKER_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8787' : 'https://airadar.anoopvshukl2.workers.dev';
     
-    // Mock Auth Token for the demo (decodes to { sub: "mock-user-1" })
+    // Mock Auth Token for the demo
     const MOCK_TOKEN = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJtb2NrLXVzZXItMSJ9.signature";
-    window.currentUser = { token: MOCK_TOKEN }; // Simulate logged in state
+    window.currentUser = null;
+
+    let bulkScoredResults = [];
+
+    // Session Persistence
+    function initAuth() {
+      const storedUser = localStorage.getItem('currentUser');
+      if (storedUser) {
+        try {
+          window.currentUser = JSON.parse(storedUser);
+          document.getElementById('nav-leads').style.display = 'inline-block';
+          updateProfileUI();
+          loadUserProfile();
+        } catch (e) {
+          console.error("Failed to parse stored user", e);
+          window.currentUser = null;
+        }
+      }
+    }
+
+    function openAuthModal() {
+      document.getElementById('auth-modal').style.display = 'flex';
+      document.getElementById('auth-modal').classList.add('open');
+    }
+    
+    function closeAuthModal() {
+      document.getElementById('auth-modal').style.display = 'none';
+      document.getElementById('auth-modal').classList.remove('open');
+    }
+
+    function mockLoginEmail() {
+      const email = document.getElementById('mock-email-input').value || 'user@example.com';
+      const name = email.split('@')[0];
+      mockLogin(email, `https://ui-avatars.com/api/?name=${name}&background=00E5A0&color=fff`);
+    }
+
+    function mockLogin(email, avatarUrl) {
+      window.currentUser = { token: MOCK_TOKEN, email, avatar: avatarUrl };
+      localStorage.setItem('currentUser', JSON.stringify(window.currentUser));
+      closeAuthModal();
+      const navLeads = document.getElementById('nav-leads');
+      if (navLeads) navLeads.style.display = 'inline-block';
+      updateProfileUI();
+      loadUserProfile();
+    }
+
+    function mockLogout() {
+      window.currentUser = null;
+      localStorage.removeItem('currentUser');
+      const navLeads = document.getElementById('nav-leads');
+      if (navLeads) navLeads.style.display = 'none';
+      const container = document.getElementById('user-profile-container');
+      container.innerHTML = `<button id="auth-btn" class="action-btn" style="padding: 6px 12px; font-size: 11px; background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.3); color: var(--accent); font-family: var(--mono); border-radius: 6px; cursor: pointer;" onclick="openAuthModal()">Sign In</button>`;
+      document.getElementById('icp-input').value = '';
+    }
+
+    function updateProfileUI() {
+      const container = document.getElementById('user-profile-container');
+      if (container && window.currentUser) {
+        container.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 4px 12px 4px 4px; border-radius: 20px; border: 1px solid var(--border2); cursor: pointer;" onclick="mockLogout()">
+            <img src="${window.currentUser.avatar}" width="24" height="24" style="border-radius: 50%;" />
+            <span style="font-size: 12px; font-family: var(--mono); color: var(--text2);">${window.currentUser.email}</span>
+          </div>`;
+      }
+    }
 
     // Load saved ICP on page load
     async function loadUserProfile() {
@@ -197,22 +347,91 @@
           const data = await res.json();
           if (data.saved_icp) {
             document.getElementById('icp-input').value = data.saved_icp;
+            parseICPStringIntoWizard(data.saved_icp);
           }
         }
       } catch (e) {
         console.error("Failed to load user profile:", e);
       }
     }
-    loadUserProfile();
 
-    // Auto-fill domain from URL params
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('domain')) {
-      document.getElementById('domain-input').value = urlParams.get('domain');
+    function parseICPStringIntoWizard(str) {
+      if (!str) return;
+      const lower = str.toLowerCase();
+      // Stage
+      if (lower.includes("seed")) document.getElementById('wiz-stage').value = "Seed";
+      else if (lower.includes("series a")) document.getElementById('wiz-stage').value = "Series A";
+      else if (lower.includes("series b")) document.getElementById('wiz-stage').value = "Series B+";
+      
+      // Category
+      if (lower.includes("infrastructure")) document.getElementById('wiz-category').value = "AI Infrastructure";
+      else if (lower.includes("agent")) document.getElementById('wiz-category').value = "AI Agents";
+      else if (lower.includes("enterprise")) document.getElementById('wiz-category').value = "Enterprise AI";
+      else if (lower.includes("vertical saas")) document.getElementById('wiz-category').value = "Vertical SaaS";
+
+      // Geo
+      if (lower.includes("united states") || lower.includes("based in us")) document.getElementById('wiz-geo').value = "US";
+      else if (lower.includes("europe") || lower.includes("based in eu")) document.getElementById('wiz-geo').value = "EU";
+
+      // Tech
+      const techMatch = str.match(/using (.*?) in their tech stack/);
+      if (techMatch) {
+        document.getElementById('wiz-tech').value = techMatch[1];
+      }
     }
 
-    let uploadedDomains = [];
+    // Wizard to custom string sync
+    function updateIcpTextFromWizard() {
+      const geo = document.getElementById('wiz-geo').value;
+      const cat = document.getElementById('wiz-category').value;
+      const stage = document.getElementById('wiz-stage').value;
+      const tech = document.getElementById('wiz-tech').value;
 
+      let icpString = `We target ${stage !== 'Any' ? stage : 'AI'} companies`;
+      if (cat !== 'Any') icpString += ` in the ${cat} sector`;
+      if (geo !== 'Global') icpString += ` based in ${geo}`;
+      if (tech) icpString += ` using ${tech} in their tech stack`;
+      icpString += `.`;
+      
+      document.getElementById('icp-input').value = icpString;
+    }
+
+    // Save ICP Profile
+    async function saveICPProfile() {
+      const icpString = document.getElementById('icp-input').value.trim();
+      if (!icpString) return alert("Please specify an ICP string first.");
+      if (!window.currentUser) {
+        alert("Please sign in to save this profile to your account.");
+        openAuthModal();
+        return;
+      }
+      const btn = document.getElementById('generate-btn');
+      btn.disabled = true;
+      btn.innerText = "Saving...";
+      try {
+        const res = await fetch(`${WORKER_BASE}/api/user/profile`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${window.currentUser.token}`
+          },
+          body: JSON.stringify({ saved_icp: icpString })
+        });
+        if (res.ok) {
+          alert("ICP Profile saved successfully to your account!");
+        } else {
+          throw new Error("Failed to save.");
+        }
+      } catch (e) {
+        alert("Error saving ICP: " + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Save ICP Profile";
+      }
+    }
+
+    // CSV File Upload Parsing
+    let uploadedDomains = [];
     function handleFileUpload() {
       const file = document.getElementById('csv-upload').files[0];
       if (!file) return;
@@ -224,57 +443,180 @@
       const reader = new FileReader();
       reader.onload = (e) => {
         const text = e.target.result;
-        // Simple CSV parser assuming first column or any column containing '.' is a domain
         const lines = text.split('\n');
         uploadedDomains = [];
         for (let line of lines) {
           const parts = line.split(',');
           for (let part of parts) {
             part = part.trim().replace(/['"]/g, '');
-            if (part.includes('.')) {
-    async function generateAndSaveICP() {
-      const geo = document.getElementById('wiz-geo').value;
-      const cat = document.getElementById('wiz-category').value;
-      const stage = document.getElementById('wiz-stage').value;
-      const tech = document.getElementById('wiz-tech').value;
+            if (part.includes('.') && part.length > 3 && !part.startsWith('http')) {
+              uploadedDomains.push(part);
+            }
+          }
+        }
+        console.log("Parsed domains:", uploadedDomains);
+      };
+      reader.readAsText(file);
+    }
 
-      let icpString = `We target ${stage !== 'Any' ? stage : 'AI'} companies`;
-      if (cat !== 'Any') icpString += ` in the ${cat} sector`;
-      if (geo !== 'Global') icpString += ` based in ${geo}`;
-      if (tech) icpString += ` using ${tech} in their tech stack`;
-      icpString += `.`;
+    // Score single or bulk domains
+    async function scoreCustom() {
+      const icp = document.getElementById('icp-input').value.trim();
+      if (!icp) return alert("Please define your Custom ICP first.");
+
+      const isBulk = document.getElementById('csv-upload').files.length > 0;
+      const domainInput = document.getElementById('domain-input').value.trim();
+
+      if (!isBulk && !domainInput) {
+        return alert("Please enter a domain to score or upload a CSV.");
+      }
 
       document.getElementById('empty-state').style.display = 'none';
       document.getElementById('results-area').style.display = 'none';
+      document.getElementById('bulk-results-area').style.display = 'none';
       document.getElementById('loading').style.display = 'block';
-      const btn = document.getElementById('generate-btn');
+
+      const btn = document.getElementById('score-btn');
       btn.disabled = true;
+      btn.innerText = "Scoring...";
 
       try {
-        if (window.currentUser) {
-          const res = await fetch(`${WORKER_BASE}/api/user/profile`, {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${window.currentUser.token}`
-            },
-            body: JSON.stringify({ saved_icp: icpString })
-          });
-          if (!res.ok) throw new Error("Failed to save to backend.");
+        let payload = { custom_icp: icp };
+        if (isBulk) {
+          payload.domains = uploadedDomains;
+        } else {
+          payload.domain = domainInput;
         }
 
+        const res = await fetch(`${WORKER_BASE}/api/score-custom`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || "Failed to analyze.");
+        }
+
+        const data = await res.json();
         document.getElementById('loading').style.display = 'none';
-        document.getElementById('results-area').style.display = 'block';
-        document.getElementById('res-rationale').textContent = `Generated Profile: "${icpString}" (Saved to your account)`;
+
+        if (isBulk) {
+          renderBulkResults(data.results);
+        } else {
+          renderSingleResult(data);
+        }
       } catch (e) {
-        alert("Failed to save ICP: " + e.message);
+        alert("Scoring failed: " + e.message);
         document.getElementById('loading').style.display = 'none';
         document.getElementById('empty-state').style.display = 'block';
       } finally {
         btn.disabled = false;
+        btn.innerText = "Analyze & Score Domain(s)";
       }
     }
 
-    </script>
+    function renderSingleResult(data) {
+      document.getElementById('results-area').style.display = 'block';
+      
+      const scoreCircle = document.getElementById('res-score');
+      scoreCircle.innerHTML = `${data.icp_score}<span>ICP</span>`;
+      
+      // Update color class for circle
+      let color = 'var(--red)';
+      if (data.icp_score >= 75) {
+        color = 'var(--accent)';
+      } else if (data.icp_score >= 60) {
+        color = 'var(--yellow)';
+      }
+      scoreCircle.style.color = color;
+      scoreCircle.style.borderColor = color;
+      scoreCircle.style.boxShadow = `0 0 20px ${color}1a`;
+
+      document.getElementById('res-company-name').innerText = data.name || data.domain;
+      document.getElementById('res-company-desc').innerText = data.description || "No description fetched from web page.";
+      document.getElementById('res-rationale').innerText = `Rationale: ${data.rationale}`;
+
+      const signalsList = document.getElementById('res-signals');
+      signalsList.innerHTML = '';
+
+      (data.signal_breakdown || []).forEach(sig => {
+        const item = document.createElement('div');
+        item.className = `signal-item ${sig.met ? 'signal-met' : 'signal-missed'}`;
+        item.innerHTML = `
+          <span class="signal-icon">${sig.met ? '✓' : '✗'}</span>
+          <span>${sig.signal}</span>
+        `;
+        signalsList.appendChild(item);
+      });
+    }
+
+    function renderBulkResults(results) {
+      bulkScoredResults = results;
+      document.getElementById('bulk-results-area').style.display = 'block';
+      
+      const list = document.getElementById('bulk-results-list');
+      list.innerHTML = '';
+
+      results.forEach(res => {
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.justifyContent = 'space-between';
+        row.style.alignItems = 'center';
+        row.style.padding = '8px 12px';
+        row.style.background = 'var(--bg)';
+        row.style.border = '1px solid var(--border)';
+        row.style.borderRadius = '6px';
+        
+        let color = 'var(--red)';
+        if (res.icp_score >= 75) color = 'var(--accent)';
+        else if (res.icp_score >= 60) color = 'var(--yellow)';
+
+        row.innerHTML = `
+          <div>
+            <div style="font-weight:700; font-size:13px; color:var(--text);">${res.name || res.domain}</div>
+            <div style="font-size:11px; color:var(--text3); font-family:var(--mono);">${res.domain}</div>
+          </div>
+          <div style="font-weight:800; font-size:14px; font-family:var(--mono); color:${color}">${res.icp_score || '0'} ICP</div>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    function exportBulkCSV() {
+      if (!bulkScoredResults.length) return alert("No results to export.");
+      const headers = ['Domain', 'Name', 'ICP Score', 'Rationale'];
+      const rows = bulkScoredResults.map(r => [
+        r.domain, r.name || '', r.icp_score || '0', r.rationale || ''
+      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+      const csv = [headers.join(','), ...rows].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'bulk-icp-scores.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Auto-fill domain from URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('domain')) {
+      document.getElementById('domain-input').value = urlParams.get('domain');
+    }
+
+    // Setup event listeners for wizard
+    ['wiz-geo', 'wiz-category', 'wiz-stage'].forEach(id => {
+      document.getElementById(id).addEventListener('change', updateIcpTextFromWizard);
+    });
+    document.getElementById('wiz-tech').addEventListener('input', updateIcpTextFromWizard);
+
+    // Initial load check
+    initAuth();
+    updateIcpTextFromWizard();
+  </script>
 </body>
 </html>
