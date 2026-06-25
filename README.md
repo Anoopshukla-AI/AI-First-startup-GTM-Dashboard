@@ -1,4 +1,5 @@
 # AIRADAR
+<!-- pr-1 -->
 ## Global AI-First Startup Radar · Built by Anoop Shukla
 
 Live pipeline tracking global AI-first startups with ICP scoring, enrichment data, and GPT-generated outreach angles. Updates nightly via GitHub Actions.
