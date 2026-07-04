@@ -1464,6 +1464,8 @@
       <div style="display: flex; flex-direction: column; gap: 12px;">
         <input type="email" id="mock-email-input" class="modal-input" placeholder="Email address" />
         <button class="action-btn primary" style="width:100%;padding:12px" onclick="mockLoginEmail()">Continue</button>
+            <div style="display:flex;align-items:center;gap:8px;margin:2px 0"><hr style="flex:1;border:none;border-top:1px solid #333"><span style="color:#555;font-size:11px;font-family:monospace">or</span><hr style="flex:1;border:none;border-top:1px solid #333"></div>
+            <button class="action-btn" style="width:100%;padding:12px;display:flex;align-items:center;justify-content:center;gap:8px" onclick="signInWithGoogle()"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="16" height="16" alt="">Continue with Google</button>
         <button class="action-btn" style="width:100%;padding:12px" onclick="closeAuthModal()">Cancel</button>
       </div>
     </div>
@@ -1514,7 +1516,7 @@
 
 <script>
 // ── CONFIG & STATE ───────────────────────────────────────────────────────
-const WORKER_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8787' : 'https://airadar.anoopvshukl2.workers.dev';
+const WORKER_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8787' : 'https://airadar.nirmataanoops.workers.dev';
 window.currentUser = null;
 
 function initAuth() {
@@ -1560,6 +1562,8 @@ let state = {
 // ── AUTH ──────────────────────────────────────────────────────────────────
 function openAuthModal() { document.getElementById('auth-modal').style.display = 'flex'; }
 function closeAuthModal() { document.getElementById('auth-modal').style.display = 'none'; }
+
+function signInWithGoogle(){const cid='YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';const url='https://accounts.google.com/o/oauth2/v2/auth?client_id='+cid+'&redirect_uri='+encodeURIComponent(location.origin)+'&response_type=token&scope=email%20profile&prompt=select_account';const p=window.open(url,'gs','width=480,height=580');const t=setInterval(()=>{try{if(p.closed){clearInterval(t);return;}const h=p.location.hash;if(h&&h.includes('access_token')){clearInterval(t);p.close();const tk=new URLSearchParams(h.slice(1)).get('access_token');fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+tk}}).then(r=>r.json()).then(u=>{localStorage.setItem('user_email',u.email);localStorage.setItem('user_name',u.name);closeAuthModal();const btn=document.getElementById('auth-btn');if(btn)btn.textContent=u.name.split(' ')[0];});}}catch(e){}},600);}
 
 function mockLoginEmail() {
   const email = document.getElementById('mock-email-input').value || 'user@example.com';
